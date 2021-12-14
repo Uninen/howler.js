@@ -73,15 +73,25 @@ export interface HowlListeners {
   onplay?: HowlCallback;
 
   /**
-   * Fires when the sound is unable to load. The first parameter is the ID of the sound (if it exists) and the second is the error message/code.
+   * Fires when new data is downloaded. The first parameter is the ID of the sound and the second
+   * parameter is an object (HTML5 onprogress timeRanges object or XHR onprogress event).
+   */
+  onprogress?: HowlCallback;
+
+  /**
+   * Fires when the sound is unable to load. The first parameter is the ID of the sound (if it
+   * exists) and the second is the error message/code.
    */
   onloaderror?: HowlErrorCallback;
 
   /**
-   * Fires when the sound is unable to play. The first parameter is the ID of the sound and the second is the error message/code.
+   * Fires when the sound is unable to play. The first parameter is the ID of the sound and the
+   * second is the error message/code.
    */
   onplayerror?: HowlErrorCallback;
 }
+
+export type HowlListenerKey = keyof HowlListeners;
 
 export interface HowlOptions extends HowlListeners {
   /**
@@ -123,7 +133,7 @@ export interface HowlOptions extends HowlListeners {
    *
    * @default `true`
    */
-  preload?: boolean | 'metadata';
+  preload?: boolean | 'metadata' | 'auto' | 'none';
 
   /**
    * Set to true to automatically start playback when sound is loaded.
@@ -214,7 +224,7 @@ class Howl {
   _muted: boolean = false;
   _loop: boolean = false;
   _pool: number = 5;
-  _preload: boolean | 'metadata' = true;
+  _preload: boolean | 'metadata' | 'auto' | 'none' = true;
   _rate: number = 1;
   _sprite: SoundSpriteDefinitions = {};
   _src: string | string[] = [];
@@ -243,6 +253,7 @@ class Howl {
   _onseek: HowlCallbacks = [];
   _onunlock: HowlCallbacks = [];
   _onresume: HowlCallbacks = [];
+  _onprogress: HowlCallbacks = [];
 
   // @ts-expect-error Not definitely assigned in constructor, likely due to using a module.
   _webAudio: boolean;
@@ -272,10 +283,9 @@ class Howl {
     this._loop = o.loop || false;
     this._pool = o.pool || 5;
 
-    this._preload =
-      typeof o.preload === 'boolean' || o.preload === 'metadata'
-        ? o.preload
-        : true;
+    if (o.preload) {
+      this._preload = o.preload;
+    }
     this._rate = o.rate || 1;
     this._sprite = o.sprite || {};
     this._src = typeof o.src !== 'string' ? o.src : [o.src];
@@ -313,6 +323,7 @@ class Howl {
     this._onseek = o.onseek ? [{ fn: o.onseek }] : [];
     this._onunlock = o.onunlock ? [{ fn: o.onunlock }] : [];
     this._onresume = [];
+    this._onprogress = o.onprogress ? [{ fn: o.onprogress }] : [];
 
     // Automatically try to enable audio.
     if (typeof Howler.ctx !== 'undefined' && Howler.ctx && Howler.autoUnlock) {
@@ -333,7 +344,11 @@ class Howl {
     }
 
     // Load the source file unless otherwise specified.
-    if (this._preload) {
+    if (
+      this._preload === true ||
+      this._preload === 'auto' ||
+      this._preload === 'metadata'
+    ) {
       this.load();
     }
   }
@@ -1727,7 +1742,7 @@ class Howl {
    * @param id    Sound ID.
    * @param msg   Message to go with event.
    */
-  _emit(event: string, id?: number | null, msg?: string | number) {
+  _emit(event: string, id?: number | null, msg?: string | number | TimeRanges) {
     var events = this['_on' + event];
 
     // Loop through event store and fire all functions.
@@ -2035,6 +2050,18 @@ class Howl {
     (node as HowlGainNode).bufferSource = null;
 
     return this;
+  }
+
+  /**
+   * Get download progress of this sound. The progress is percentage (0 - 100).
+   * @param  {Number} id The id of the sound. If none is passed, return the first.
+   * @returns The download progress of the sound.
+   */
+  _progress(id: number) {
+    // Get the sound.
+    let sound = this._sounds[id];
+
+    return sound._progress;
   }
 
   /**

@@ -16,6 +16,7 @@ declare class Sound {
     _paused: boolean;
     _ended: boolean;
     _sprite: string;
+    _progress: number;
     _id: number;
     _node: HowlGainNode | HowlerAudioElement;
     _errorFn: EventListener;
@@ -49,6 +50,10 @@ declare class Sound {
      * HTML5 Audio canplaythrough listener callback.
      */
     _loadListener(): void;
+    /**
+     * HTML5 Audio progress listener callback.
+     */
+    _progressListener(): void;
     /**
      * HTML5 Audio ended listener callback.
      */

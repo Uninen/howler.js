@@ -426,6 +426,7 @@ var Sound = class {
     this._paused = true;
     this._ended = true;
     this._sprite = "__default";
+    this._progress = 0;
     this._errorFn = () => {
     };
     this._loadFn = () => {
@@ -503,6 +504,17 @@ var Sound = class {
     }
     this._node.removeEventListener(howler_default._canPlayEvent, this._loadFn, false);
   }
+  _progressListener() {
+    const self = this;
+    const parent = self._parent;
+    const node = self._node;
+    let buffered = self._progress;
+    if (node.buffered.length) {
+      buffered = node.buffered.end(node.buffered.length - 1);
+    }
+    self._progress = buffered / node.duration * 100;
+    parent._emit("progress", self._id, node.buffered);
+  }
   _endListener() {
     const parent = this._parent;
     if (parent._duration === Infinity) {
@@ -551,6 +563,7 @@ var Howl = class {
     this._onseek = [];
     this._onunlock = [];
     this._onresume = [];
+    this._onprogress = [];
     if (!o.src || o.src.length === 0) {
       console.error("An array of source files must be passed with any new Howl.");
       return;
@@ -560,7 +573,9 @@ var Howl = class {
     this._muted = o.mute || false;
     this._loop = o.loop || false;
     this._pool = o.pool || 5;
-    this._preload = typeof o.preload === "boolean" || o.preload === "metadata" ? o.preload : true;
+    if (o.preload) {
+      this._preload = o.preload;
+    }
     this._rate = o.rate || 1;
     this._sprite = o.sprite || {};
     this._src = typeof o.src !== "string" ? o.src : [o.src];
@@ -592,6 +607,7 @@ var Howl = class {
     this._onseek = o.onseek ? [{ fn: o.onseek }] : [];
     this._onunlock = o.onunlock ? [{ fn: o.onunlock }] : [];
     this._onresume = [];
+    this._onprogress = o.onprogress ? [{ fn: o.onprogress }] : [];
     if (typeof howler_default.ctx !== "undefined" && howler_default.ctx && howler_default.autoUnlock) {
       howler_default._unlockAudio();
     }
@@ -604,7 +620,7 @@ var Howl = class {
         }
       });
     }
-    if (this._preload) {
+    if (this._preload === true || this._preload === "auto" || this._preload === "metadata") {
       this.load();
     }
   }
@@ -1072,7 +1088,7 @@ var Howl = class {
     }, stepLen);
   }
   _stopFade(id) {
-    var sound = this._soundById(id);
+    let sound = this._soundById(id);
     if (sound && sound._interval) {
       if (this._webAudio && howler_default.ctx) {
         sound._node.gain.cancelScheduledValues(howler_default.ctx.currentTime);
@@ -1183,6 +1199,7 @@ var Howl = class {
   }
   seek(...args) {
     let seek, id;
+    let sound = null;
     if (args.length === 0) {
       if (this._sounds.length) {
         id = this._sounds[0]._id;
@@ -1212,7 +1229,9 @@ var Howl = class {
       });
       return this;
     }
-    var sound = this._soundById(id);
+    if (id) {
+      sound = this._soundById(id);
+    }
     if (sound) {
       if (typeof seek === "number" && seek >= 0) {
         var playing = this.playing(id);
@@ -1257,7 +1276,7 @@ var Howl = class {
   }
   playing(id) {
     if (id) {
-      var sound = this._soundById(id);
+      let sound = this._soundById(id);
       return sound ? !sound._paused : false;
     }
     for (var i = 0; i < this._sounds.length; i++) {
@@ -1268,8 +1287,11 @@ var Howl = class {
     return false;
   }
   duration(id) {
-    var duration = this._duration;
-    var sound = this._soundById(id);
+    let duration = this._duration;
+    let sound = null;
+    if (id) {
+      sound = this._soundById(id);
+    }
     if (sound) {
       duration = this._sprite[sound._sprite][1] / 1e3;
     }
@@ -1417,7 +1439,7 @@ var Howl = class {
       if (typeof this._endTimers[id] !== "function") {
         clearTimeout(this._endTimers[id]);
       } else {
-        var sound = this._soundById(id);
+        let sound = this._soundById(id);
         if (sound && sound._node) {
           sound._node.removeEventListener("ended", this._endTimers[id], false);
         }
@@ -1512,6 +1534,10 @@ var Howl = class {
     }
     node.bufferSource = null;
     return this;
+  }
+  _progress(id) {
+    let sound = this._sounds[id];
+    return sound._progress;
   }
   _clearSound(node) {
     var checkIE = /MSIE |Trident\//.test(howler_default._navigator && howler_default._navigator.userAgent);
