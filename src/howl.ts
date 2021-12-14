@@ -260,11 +260,6 @@ class Howl {
       return;
     }
 
-    // If we don't have an AudioContext created yet, run the setup.
-    if (!Howler.ctx) {
-      Howler._setupAudioContext();
-    }
-
     // Setup user-defined default properties.
     this._format =
       o.format === undefined
@@ -292,6 +287,17 @@ class Howl {
         o.xhr && o.xhr.withCredentials ? o.xhr.withCredentials : false,
     };
 
+    if (!this._html5) {
+      // If we're not forcing HTML5 and we don't have an AudioContext created yet, run the setup.
+      if (!Howler.ctx) {
+        // sets Howler.usingWebAudio
+        Howler._setupAudioContext();
+      }
+    } else {
+      Howler.usingWebAudio = false;
+    }
+    this._webAudio = Howler.usingWebAudio;
+
     // Setup event listeners.
     this._onend = o.onend ? [{ fn: o.onend }] : [];
     this._onfade = o.onfade ? [{ fn: o.onfade }] : [];
@@ -307,9 +313,6 @@ class Howl {
     this._onseek = o.onseek ? [{ fn: o.onseek }] : [];
     this._onunlock = o.onunlock ? [{ fn: o.onunlock }] : [];
     this._onresume = [];
-
-    // Web Audio or HTML5 Audio?
-    this._webAudio = Howler.usingWebAudio && !this._html5;
 
     // Automatically try to enable audio.
     if (typeof Howler.ctx !== 'undefined' && Howler.ctx && Howler.autoUnlock) {

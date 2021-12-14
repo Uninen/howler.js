@@ -552,9 +552,6 @@ var Howl = class {
       console.error("An array of source files must be passed with any new Howl.");
       return;
     }
-    if (!howler_default.ctx) {
-      howler_default._setupAudioContext();
-    }
     this._format = o.format === void 0 ? [] : typeof o.format !== "string" ? o.format : [o.format];
     this._html5 = o.html5 || false;
     this._muted = o.mute || false;
@@ -570,6 +567,14 @@ var Howl = class {
       headers: o.xhr && o.xhr.headers ? o.xhr.headers : void 0,
       withCredentials: o.xhr && o.xhr.withCredentials ? o.xhr.withCredentials : false
     };
+    if (!this._html5) {
+      if (!howler_default.ctx) {
+        howler_default._setupAudioContext();
+      }
+    } else {
+      howler_default.usingWebAudio = false;
+    }
+    this._webAudio = howler_default.usingWebAudio;
     this._onend = o.onend ? [{ fn: o.onend }] : [];
     this._onfade = o.onfade ? [{ fn: o.onfade }] : [];
     this._onload = o.onload ? [{ fn: o.onload }] : [];
@@ -584,7 +589,6 @@ var Howl = class {
     this._onseek = o.onseek ? [{ fn: o.onseek }] : [];
     this._onunlock = o.onunlock ? [{ fn: o.onunlock }] : [];
     this._onresume = [];
-    this._webAudio = howler_default.usingWebAudio && !this._html5;
     if (typeof howler_default.ctx !== "undefined" && howler_default.ctx && howler_default.autoUnlock) {
       howler_default._unlockAudio();
     }
@@ -1489,7 +1493,10 @@ var Howl = class {
     return this;
   }
   _cleanBuffer(node) {
-    var isIOS = howler_default._navigator && howler_default._navigator.vendor.indexOf("Apple") >= 0;
+    let isIOS = howler_default._navigator && howler_default._navigator.vendor.indexOf("Apple") >= 0;
+    if (!node.bufferSource) {
+      return this;
+    }
     if (howler_default._scratchBuffer && node.bufferSource) {
       node.bufferSource.onended = null;
       node.bufferSource.disconnect(0);
