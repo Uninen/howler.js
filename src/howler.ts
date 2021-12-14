@@ -409,6 +409,11 @@ class Howler {
     if (!this._mobileUnloaded && this.ctx.sampleRate !== 44100) {
       this._mobileUnloaded = true;
       this.unload();
+
+      // In some cases, the unload method results in a null context
+      if (!this.ctx) {
+        return;
+      }
     }
 
     // Scratch buffer for enabling iOS to dispose of web audio buffers correctly, as per:

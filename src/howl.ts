@@ -73,15 +73,25 @@ export interface HowlListeners {
   onplay?: HowlCallback;
 
   /**
-   * Fires when the sound is unable to load. The first parameter is the ID of the sound (if it exists) and the second is the error message/code.
+   * Fires when new data is downloaded. The first parameter is the ID of the sound and the second
+   * parameter is an object (HTML5 onprogress timeRanges object or XHR onprogress event).
+   */
+  onprogress?: HowlCallback;
+
+  /**
+   * Fires when the sound is unable to load. The first parameter is the ID of the sound (if it
+   * exists) and the second is the error message/code.
    */
   onloaderror?: HowlErrorCallback;
 
   /**
-   * Fires when the sound is unable to play. The first parameter is the ID of the sound and the second is the error message/code.
+   * Fires when the sound is unable to play. The first parameter is the ID of the sound and the
+   * second is the error message/code.
    */
   onplayerror?: HowlErrorCallback;
 }
+
+export type HowlListenerKey = keyof HowlListeners;
 
 export interface HowlOptions extends HowlListeners {
   /**
@@ -123,7 +133,7 @@ export interface HowlOptions extends HowlListeners {
    *
    * @default `true`
    */
-  preload?: boolean | 'metadata';
+  preload?: boolean | 'metadata' | 'auto' | 'none';
 
   /**
    * Set to true to automatically start playback when sound is loaded.
@@ -214,7 +224,7 @@ class Howl {
   _muted: boolean = false;
   _loop: boolean = false;
   _pool: number = 5;
-  _preload: boolean | 'metadata' = true;
+  _preload: boolean | 'metadata' | 'auto' | 'none' = true;
   _rate: number = 1;
   _sprite: SoundSpriteDefinitions = {};
   _src: string | string[] = [];
@@ -243,6 +253,7 @@ class Howl {
   _onseek: HowlCallbacks = [];
   _onunlock: HowlCallbacks = [];
   _onresume: HowlCallbacks = [];
+  _onprogress: HowlCallbacks = [];
 
   // @ts-expect-error Not definitely assigned in constructor, likely due to using a module.
   _webAudio: boolean;
@@ -260,11 +271,6 @@ class Howl {
       return;
     }
 
-    // If we don't have an AudioContext created yet, run the setup.
-    if (!Howler.ctx) {
-      Howler._setupAudioContext();
-    }
-
     // Setup user-defined default properties.
     this._format =
       o.format === undefined
@@ -277,10 +283,9 @@ class Howl {
     this._loop = o.loop || false;
     this._pool = o.pool || 5;
 
-    this._preload =
-      typeof o.preload === 'boolean' || o.preload === 'metadata'
-        ? o.preload
-        : true;
+    if (o.preload) {
+      this._preload = o.preload;
+    }
     this._rate = o.rate || 1;
     this._sprite = o.sprite || {};
     this._src = typeof o.src !== 'string' ? o.src : [o.src];
@@ -291,6 +296,17 @@ class Howl {
       withCredentials:
         o.xhr && o.xhr.withCredentials ? o.xhr.withCredentials : false,
     };
+
+    if (!this._html5) {
+      // If we're not forcing HTML5 and we don't have an AudioContext created yet, run the setup.
+      if (!Howler.ctx) {
+        // sets Howler.usingWebAudio
+        Howler._setupAudioContext();
+      }
+    } else {
+      Howler.usingWebAudio = false;
+    }
+    this._webAudio = Howler.usingWebAudio;
 
     // Setup event listeners.
     this._onend = o.onend ? [{ fn: o.onend }] : [];
@@ -307,9 +323,7 @@ class Howl {
     this._onseek = o.onseek ? [{ fn: o.onseek }] : [];
     this._onunlock = o.onunlock ? [{ fn: o.onunlock }] : [];
     this._onresume = [];
-
-    // Web Audio or HTML5 Audio?
-    this._webAudio = Howler.usingWebAudio && !this._html5;
+    this._onprogress = o.onprogress ? [{ fn: o.onprogress }] : [];
 
     // Automatically try to enable audio.
     if (typeof Howler.ctx !== 'undefined' && Howler.ctx && Howler.autoUnlock) {
@@ -330,7 +344,11 @@ class Howl {
     }
 
     // Load the source file unless otherwise specified.
-    if (this._preload) {
+    if (
+      this._preload === true ||
+      this._preload === 'auto' ||
+      this._preload === 'metadata'
+    ) {
       this.load();
     }
   }
@@ -770,7 +788,7 @@ class Howl {
    * @param id The sound ID (empty to pause all in group).
    * @param skipEmit If true, the `pause` event won't be emitted.
    */
-  pause(id: number, skipEmit?: boolean) {
+  pause(id?: number, skipEmit?: boolean) {
     // If the sound hasn't loaded or a play() promise is pending, add it to the load queue to pause when capable.
     if (this._state !== 'loaded' || this._playLock) {
       this._queue.push({
@@ -1224,8 +1242,8 @@ class Howl {
    * @param  {Number} id The sound id.
    * @return {Howl}
    */
-  _stopFade(id) {
-    var sound = this._soundById(id);
+  _stopFade(id: number) {
+    let sound = this._soundById(id);
 
     if (sound && sound._interval) {
       if (this._webAudio && Howler.ctx) {
@@ -1413,6 +1431,7 @@ class Howl {
    */
   seek(...args) {
     let seek, id;
+    let sound: Sound | null = null;
 
     // Determine the values based on arguments.
     if (args.length === 0) {
@@ -1456,7 +1475,9 @@ class Howl {
     }
 
     // Get the sound.
-    var sound = this._soundById(id);
+    if (id) {
+      sound = this._soundById(id);
+    }
 
     if (sound) {
       if (typeof seek === 'number' && seek >= 0) {
@@ -1524,10 +1545,10 @@ class Howl {
    * @param id The sound id to check. If none is passed, the whole sound group is checked.
    * @return True if playing and false if not.
    */
-  playing(id: number) {
+  playing(id?: number) {
     // Check the passed sound ID (if any).
-    if (typeof id === 'number') {
-      var sound = this._soundById(id);
+    if (id) {
+      let sound = this._soundById(id);
       return sound ? !sound._paused : false;
     }
 
@@ -1546,11 +1567,14 @@ class Howl {
    * @param id The sound id to check. If none is passed, return full source duration.
    * @return Audio duration in seconds.
    */
-  duration(id: number) {
-    var duration = this._duration;
+  duration(id?: number) {
+    let duration = this._duration;
 
     // If we pass an ID, get the sound and return the sprite length.
-    var sound = this._soundById(id);
+    let sound: Sound | null = null;
+    if (id) {
+      sound = this._soundById(id);
+    }
     if (sound) {
       duration = this._sprite[sound._sprite][1] / 1000;
     }
@@ -1647,7 +1671,8 @@ class Howl {
    * @param  {Number}   once  (INTERNAL) Marks event to fire only once.
    */
   on(event: string, fn: Function, id?: number, once?: number) {
-    var events = this['_on' + event];
+    // FIXME: we should type the event either programatically or manually listing available events
+    let events = this['_on' + event];
 
     if (typeof fn === 'function') {
       events.push(once ? { id: id, fn: fn, once: once } : { id: id, fn: fn });
@@ -1717,7 +1742,7 @@ class Howl {
    * @param id    Sound ID.
    * @param msg   Message to go with event.
    */
-  _emit(event: string, id?: number | null, msg?: string | number) {
+  _emit(event: string, id?: number | null, msg?: string | number | TimeRanges) {
     var events = this['_on' + event];
 
     // Loop through event store and fire all functions.
@@ -1848,7 +1873,7 @@ class Howl {
       if (typeof this._endTimers[id] !== 'function') {
         clearTimeout(this._endTimers[id]);
       } else {
-        var sound = this._soundById(id);
+        let sound = this._soundById(id);
         if (sound && sound._node) {
           sound._node.removeEventListener('ended', this._endTimers[id], false);
         }
@@ -2001,8 +2026,12 @@ class Howl {
    * @return {Howl}
    */
   _cleanBuffer(node: Sound['_node']) {
-    var isIOS =
+    let isIOS =
       Howler._navigator && Howler._navigator.vendor.indexOf('Apple') >= 0;
+
+    if (!(node as HowlGainNode).bufferSource) {
+      return this;
+    }
 
     if (Howler._scratchBuffer && (node as HowlGainNode).bufferSource) {
       ((node as HowlGainNode).bufferSource as AudioBufferSourceNode).onended =
@@ -2021,6 +2050,18 @@ class Howl {
     (node as HowlGainNode).bufferSource = null;
 
     return this;
+  }
+
+  /**
+   * Get download progress of this sound. The progress is percentage (0 - 100).
+   * @param  {Number} id The id of the sound. If none is passed, return the first.
+   * @returns The download progress of the sound.
+   */
+  _progress(id: number) {
+    // Get the sound.
+    let sound = this._sounds[id];
+
+    return sound._progress;
   }
 
   /**

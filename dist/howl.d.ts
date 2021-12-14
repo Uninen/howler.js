@@ -56,14 +56,22 @@ export interface HowlListeners {
      */
     onplay?: HowlCallback;
     /**
-     * Fires when the sound is unable to load. The first parameter is the ID of the sound (if it exists) and the second is the error message/code.
+     * Fires when new data is downloaded. The first parameter is the ID of the sound and the second
+     * parameter is an object (HTML5 onprogress timeRanges object or XHR onprogress event).
+     */
+    onprogress?: HowlCallback;
+    /**
+     * Fires when the sound is unable to load. The first parameter is the ID of the sound (if it
+     * exists) and the second is the error message/code.
      */
     onloaderror?: HowlErrorCallback;
     /**
-     * Fires when the sound is unable to play. The first parameter is the ID of the sound and the second is the error message/code.
+     * Fires when the sound is unable to play. The first parameter is the ID of the sound and the
+     * second is the error message/code.
      */
     onplayerror?: HowlErrorCallback;
 }
+export declare type HowlListenerKey = keyof HowlListeners;
 export interface HowlOptions extends HowlListeners {
     /**
      * The sources to the track(s) to be loaded for the sound (URLs or base64 data URIs). These should
@@ -100,7 +108,7 @@ export interface HowlOptions extends HowlListeners {
      *
      * @default `true`
      */
-    preload?: boolean | 'metadata';
+    preload?: boolean | 'metadata' | 'auto' | 'none';
     /**
      * Set to true to automatically start playback when sound is loaded.
      *
@@ -170,7 +178,7 @@ declare class Howl {
     _muted: boolean;
     _loop: boolean;
     _pool: number;
-    _preload: boolean | 'metadata';
+    _preload: boolean | 'metadata' | 'auto' | 'none';
     _rate: number;
     _sprite: SoundSpriteDefinitions;
     _src: string | string[];
@@ -196,6 +204,7 @@ declare class Howl {
     _onseek: HowlCallbacks;
     _onunlock: HowlCallbacks;
     _onresume: HowlCallbacks;
+    _onprogress: HowlCallbacks;
     _webAudio: boolean;
     /**
      * Create an audio group controller.
@@ -218,7 +227,7 @@ declare class Howl {
      * @param id The sound ID (empty to pause all in group).
      * @param skipEmit If true, the `pause` event won't be emitted.
      */
-    pause(id: number, skipEmit?: boolean): this;
+    pause(id?: number, skipEmit?: boolean): this;
     /**
      * Stop playback and reset to start.
      * @param id The sound ID (empty to stop all in group).
@@ -264,7 +273,7 @@ declare class Howl {
      * @param  {Number} id The sound id.
      * @return {Howl}
      */
-    _stopFade(id: any): this;
+    _stopFade(id: number): this;
     /**
      * Get/set the loop parameter on a sound. This method can optionally take 0, 1 or 2 arguments.
      *   loop() -> Returns the group's loop value.
@@ -297,13 +306,13 @@ declare class Howl {
      * @param id The sound id to check. If none is passed, the whole sound group is checked.
      * @return True if playing and false if not.
      */
-    playing(id: number): boolean;
+    playing(id?: number): boolean;
     /**
      * Get the duration of this sound. Passing a sound id will return the sprite duration.
      * @param id The sound id to check. If none is passed, return full source duration.
      * @return Audio duration in seconds.
      */
-    duration(id: number): number;
+    duration(id?: number): number;
     /**
      * Returns the current loaded state of this Howl.
      * @return 'unloaded', 'loading', 'loaded'
@@ -343,7 +352,7 @@ declare class Howl {
      * @param id    Sound ID.
      * @param msg   Message to go with event.
      */
-    _emit(event: string, id?: number | null, msg?: string | number): this;
+    _emit(event: string, id?: number | null, msg?: string | number | TimeRanges): this;
     /**
      * Queue of actions initiated before the sound has loaded.
      * These will be called in sequence, with the next only firing
@@ -392,6 +401,12 @@ declare class Howl {
      * @return {Howl}
      */
     _cleanBuffer(node: Sound['_node']): this;
+    /**
+     * Get download progress of this sound. The progress is percentage (0 - 100).
+     * @param  {Number} id The id of the sound. If none is passed, return the first.
+     * @returns The download progress of the sound.
+     */
+    _progress(id: number): number;
     /**
      * Set the source to a 0-second silence to stop any downloading (except in IE).
      * @param  {Object} node Audio node to clear.

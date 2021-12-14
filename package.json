@@ -1,6 +1,6 @@
 {
   "name": "@uninen/howler",
-  "version": "3.0.0-alpha.1",
+  "version": "3.0.0-alpha.3",
   "description": "Javascript audio library for the modern web.",
   "homepage": "https://github.com/Uninen/howler.js",
   "keywords": [
@@ -26,11 +26,13 @@
     "test": "vite",
     "test:network": "vite --host",
     "build": "node esbuild.js",
+    "typecheck": "tsc --emitDeclarationOnly false --noEmit true",
     "release": "VERSION=`printf 'v' && node -e 'console.log(require(\"./package.json\").version)'` && git tag $VERSION && git push && git push origin $VERSION && npm publish"
   },
   "devDependencies": {
     "esbuild": "^0.14.3",
     "prettier": "^2.5.1",
+    "tsc": "^2.0.3",
     "typescript": "^4.5.4",
     "vite": "^2.7.2"
   },

@@ -18,6 +18,7 @@ class Sound {
   _paused: boolean = true;
   _ended: boolean = true;
   _sprite: string = '__default';
+  _progress: number = 0;
   _id: number;
 
   _node: HowlGainNode | HowlerAudioElement;
@@ -176,6 +177,27 @@ class Sound {
 
     // Clear the event listener.
     this._node.removeEventListener(Howler._canPlayEvent, this._loadFn, false);
+  }
+
+  /**
+   * HTML5 Audio progress listener callback.
+   */
+  _progressListener() {
+    const self = this;
+    const parent = self._parent;
+    const node = self._node as HowlerAudioElement;
+    let buffered = self._progress;
+
+    // Get the end time of the last dowloaded range of the audio
+    if (node.buffered.length) {
+      buffered = node.buffered.end(node.buffered.length - 1);
+    }
+
+    self._progress = (buffered / node.duration) * 100;
+
+    // Return the whole buffered ranges as message, incase people
+    // who are using HTML5 want the buffered ranges.
+    parent._emit('progress', self._id, node.buffered);
   }
 
   /**
