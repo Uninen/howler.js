@@ -1,6 +1,6 @@
 {
   "name": "@uninen/howler",
-  "version": "3.0.0-alpha.0",
+  "version": "3.0.0-alpha.1",
   "description": "Javascript audio library for the modern web.",
   "homepage": "https://github.com/Uninen/howler.js",
   "keywords": [
@@ -38,11 +38,12 @@
   "main": "dist/howler.js",
   "license": "MIT",
   "files": [
-    "dist/howler.js",
-    "dist/howler.min.js",
-    "dist/howler.core.min.js",
-    "dist/howler.spatial.min.js",
-    "LICENSE.md"
+    "dist/core.js",
+    "dist/core.d.ts",
+    "dist/helpers.d.ts",
+    "dist/howl.d.ts",
+    "dist/howler.d.ts",
+    "dist/sound.d.ts"
   ],
   "dependencies": {
     "fs-extra": "^10.0.0"
