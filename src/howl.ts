@@ -2001,8 +2001,12 @@ class Howl {
    * @return {Howl}
    */
   _cleanBuffer(node: Sound['_node']) {
-    var isIOS =
+    let isIOS =
       Howler._navigator && Howler._navigator.vendor.indexOf('Apple') >= 0;
+
+    if (!(node as HowlGainNode).bufferSource) {
+      return this;
+    }
 
     if (Howler._scratchBuffer && (node as HowlGainNode).bufferSource) {
       ((node as HowlGainNode).bufferSource as AudioBufferSourceNode).onended =
