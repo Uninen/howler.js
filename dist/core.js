@@ -198,6 +198,9 @@ var Howler = class {
     if (!this._mobileUnloaded && this.ctx.sampleRate !== 44100) {
       this._mobileUnloaded = true;
       this.unload();
+      if (!this.ctx) {
+        return;
+      }
     }
     this._scratchBuffer = this.ctx.createBuffer(1, 1, 22050);
     const unlock = () => {
@@ -1253,7 +1256,7 @@ var Howl = class {
     return this;
   }
   playing(id) {
-    if (typeof id === "number") {
+    if (id) {
       var sound = this._soundById(id);
       return sound ? !sound._paused : false;
     }
@@ -1311,7 +1314,7 @@ var Howl = class {
     return null;
   }
   on(event, fn, id, once) {
-    var events = this["_on" + event];
+    let events = this["_on" + event];
     if (typeof fn === "function") {
       events.push(once ? { id, fn, once } : { id, fn });
     }

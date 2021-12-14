@@ -218,7 +218,7 @@ declare class Howl {
      * @param id The sound ID (empty to pause all in group).
      * @param skipEmit If true, the `pause` event won't be emitted.
      */
-    pause(id: number, skipEmit?: boolean): this;
+    pause(id?: number, skipEmit?: boolean): this;
     /**
      * Stop playback and reset to start.
      * @param id The sound ID (empty to stop all in group).
@@ -264,7 +264,7 @@ declare class Howl {
      * @param  {Number} id The sound id.
      * @return {Howl}
      */
-    _stopFade(id: any): this;
+    _stopFade(id: number): this;
     /**
      * Get/set the loop parameter on a sound. This method can optionally take 0, 1 or 2 arguments.
      *   loop() -> Returns the group's loop value.
@@ -297,13 +297,13 @@ declare class Howl {
      * @param id The sound id to check. If none is passed, the whole sound group is checked.
      * @return True if playing and false if not.
      */
-    playing(id: number): boolean;
+    playing(id?: number): boolean;
     /**
      * Get the duration of this sound. Passing a sound id will return the sprite duration.
      * @param id The sound id to check. If none is passed, return full source duration.
      * @return Audio duration in seconds.
      */
-    duration(id: number): number;
+    duration(id?: number): number;
     /**
      * Returns the current loaded state of this Howl.
      * @return 'unloaded', 'loading', 'loaded'

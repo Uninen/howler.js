@@ -74,7 +74,7 @@ declare class Howler {
      * Attempt to automatically unlock audio on the first user interaction.
      * Concept from: http://paulbakaus.com/tutorials/html5/web-audio-on-ios/
      */
-    _unlockAudio(): this;
+    _unlockAudio(): this | undefined;
     /**
      * Get an unlocked HTML5 Audio object from the pool. If none are left,
      * return a new Audio object and throw a warning.

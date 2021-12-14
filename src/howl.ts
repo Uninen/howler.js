@@ -1227,8 +1227,8 @@ class Howl {
    * @param  {Number} id The sound id.
    * @return {Howl}
    */
-  _stopFade(id) {
-    var sound = this._soundById(id);
+  _stopFade(id: number) {
+    let sound = this._soundById(id);
 
     if (sound && sound._interval) {
       if (this._webAudio && Howler.ctx) {
@@ -1416,6 +1416,7 @@ class Howl {
    */
   seek(...args) {
     let seek, id;
+    let sound: Sound | null = null;
 
     // Determine the values based on arguments.
     if (args.length === 0) {
@@ -1459,7 +1460,9 @@ class Howl {
     }
 
     // Get the sound.
-    var sound = this._soundById(id);
+    if (id) {
+      sound = this._soundById(id);
+    }
 
     if (sound) {
       if (typeof seek === 'number' && seek >= 0) {
@@ -1530,7 +1533,7 @@ class Howl {
   playing(id?: number) {
     // Check the passed sound ID (if any).
     if (id) {
-      var sound = this._soundById(id);
+      let sound = this._soundById(id);
       return sound ? !sound._paused : false;
     }
 
@@ -1550,10 +1553,13 @@ class Howl {
    * @return Audio duration in seconds.
    */
   duration(id?: number) {
-    var duration = this._duration;
+    let duration = this._duration;
 
     // If we pass an ID, get the sound and return the sprite length.
-    var sound = this._soundById(id);
+    let sound: Sound | null = null;
+    if (id) {
+      sound = this._soundById(id);
+    }
     if (sound) {
       duration = this._sprite[sound._sprite][1] / 1000;
     }
@@ -1852,7 +1858,7 @@ class Howl {
       if (typeof this._endTimers[id] !== 'function') {
         clearTimeout(this._endTimers[id]);
       } else {
-        var sound = this._soundById(id);
+        let sound = this._soundById(id);
         if (sound && sound._node) {
           sound._node.removeEventListener('ended', this._endTimers[id], false);
         }
