@@ -22,6 +22,7 @@ declare class Sound {
     _errorFn: EventListener;
     _loadFn: EventListener;
     _endFn: EventListener;
+    _progressFn: EventListener;
     _panner?: AudioParam;
     _rateSeek?: number;
     _playStart: number;

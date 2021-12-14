@@ -166,7 +166,7 @@ declare type HowlCallbacks = Array<{
 declare type HowlErrorCallbacks = Array<{
     fn: HowlErrorCallback;
 }>;
-declare type HowlEvent = 'play' | 'end' | 'pause' | 'stop' | 'mute' | 'volume' | 'rate' | 'seek' | 'fade' | 'unlock' | 'load' | 'loaderror' | 'playerror';
+declare type HowlEvent = 'play' | 'end' | 'pause' | 'stop' | 'mute' | 'volume' | 'rate' | 'seek' | 'fade' | 'unlock' | 'load' | 'progress' | 'loaderror' | 'playerror';
 interface HowlEventHandler {
     event: HowlEvent;
     action: () => void;
@@ -406,7 +406,7 @@ declare class Howl {
      * @param  {Number} id The id of the sound. If none is passed, return the first.
      * @returns The download progress of the sound.
      */
-    _progress(id: number): number;
+    _progress(id?: number): number;
     /**
      * Set the source to a 0-second silence to stop any downloading (except in IE).
      * @param  {Object} node Audio node to clear.

@@ -25,6 +25,7 @@ class Sound {
   _errorFn: EventListener = () => {};
   _loadFn: EventListener = () => {};
   _endFn: EventListener = () => {};
+  _progressFn: EventListener = () => {};
   // TODO: Add better type when adding the spatial audio plugin.
   _panner?: AudioParam;
 
@@ -98,7 +99,10 @@ class Sound {
       // Listen for the 'ended' event on the sound to account for edge-case where
       // a finite sound has a duration of Infinity.
       this._endFn = this._endListener.bind(this);
-      this._node.addEventListener('ended', this._endFn, false);
+
+      // Listen for the 'progress' event
+      this._progressFn = this._progressListener.bind(this);
+      this._node.addEventListener('progress', this._progressFn, false);
 
       // Setup the new audio node.
       (this._node as HTMLAudioElement).src = parent._src as string;

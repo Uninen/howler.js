@@ -208,6 +208,7 @@ type HowlEvent =
   | 'fade'
   | 'unlock'
   | 'load'
+  | 'progress'
   | 'loaderror'
   | 'playerror';
 
@@ -1675,7 +1676,11 @@ class Howl {
     let events = this['_on' + event];
 
     if (typeof fn === 'function') {
-      events.push(once ? { id: id, fn: fn, once: once } : { id: id, fn: fn });
+      try {
+        events.push(once ? { id: id, fn: fn, once: once } : { id: id, fn: fn });
+      } catch (err) {
+        console.error(`Unknown event ${event}: `, err);
+      }
     }
 
     return this;
@@ -2057,7 +2062,7 @@ class Howl {
    * @param  {Number} id The id of the sound. If none is passed, return the first.
    * @returns The download progress of the sound.
    */
-  _progress(id: number) {
+  _progress(id: number = 0) {
     // Get the sound.
     let sound = this._sounds[id];
 

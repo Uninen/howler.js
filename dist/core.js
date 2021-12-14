@@ -433,6 +433,8 @@ var Sound = class {
     };
     this._endFn = () => {
     };
+    this._progressFn = () => {
+    };
     this._playStart = 0;
     this._start = 0;
     this._stop = 0;
@@ -465,7 +467,8 @@ var Sound = class {
       this._loadFn = this._loadListener.bind(this);
       this._node.addEventListener(howler_default._canPlayEvent, this._loadFn, false);
       this._endFn = this._endListener.bind(this);
-      this._node.addEventListener("ended", this._endFn, false);
+      this._progressFn = this._progressListener.bind(this);
+      this._node.addEventListener("progress", this._progressFn, false);
       this._node.src = parent._src;
       this._node.preload = parent._preload === true ? "auto" : parent._preload;
       this._node.volume = volume * howler_default.volume();
@@ -1338,7 +1341,11 @@ var Howl = class {
   on(event, fn, id, once) {
     let events = this["_on" + event];
     if (typeof fn === "function") {
-      events.push(once ? { id, fn, once } : { id, fn });
+      try {
+        events.push(once ? { id, fn, once } : { id, fn });
+      } catch (err) {
+        console.error(`Unknown event ${event}: `, err);
+      }
     }
     return this;
   }
@@ -1535,7 +1542,7 @@ var Howl = class {
     node.bufferSource = null;
     return this;
   }
-  _progress(id) {
+  _progress(id = 0) {
     let sound = this._sounds[id];
     return sound._progress;
   }
