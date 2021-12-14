@@ -28,10 +28,10 @@
     "release": "VERSION=`printf 'v' && node -e 'console.log(require(\"./package.json\").version)'` && git tag $VERSION && git push && git push origin $VERSION && npm publish"
   },
   "devDependencies": {
-    "esbuild": "^0.13.2",
-    "prettier": "^2.4.1",
-    "typescript": "^4.4.3",
-    "vite": "^2.5.10"
+    "esbuild": "^0.14.3",
+    "prettier": "^2.5.1",
+    "typescript": "^4.5.4",
+    "vite": "^2.7.2"
   },
   "type": "module",
   "main": "dist/howler.js",

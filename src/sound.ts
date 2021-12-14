@@ -101,6 +101,7 @@ class Sound {
 
       // Setup the new audio node.
       (this._node as HTMLAudioElement).src = parent._src as string;
+      // @ts-expect-error
       (this._node as HTMLAudioElement).preload =
         parent._preload === true ? 'auto' : (parent._preload as string);
       this._node.volume = volume * (Howler.volume() as number);
