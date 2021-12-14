@@ -35,7 +35,7 @@
     "vite": "^2.7.2"
   },
   "type": "module",
-  "main": "dist/howler.js",
+  "main": "dist/core.js",
   "license": "MIT",
   "files": [
     "dist/core.js",
