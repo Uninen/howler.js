@@ -1,8 +1,8 @@
 {
-  "name": "howler",
-  "version": "3.0.0@alpha.0",
+  "name": "@uninen/howler",
+  "version": "3.0.0-alpha.0",
   "description": "Javascript audio library for the modern web.",
-  "homepage": "https://howlerjs.com",
+  "homepage": "https://github.com/Uninen/howler.js",
   "keywords": [
     "howler",
     "howler.js",
@@ -14,12 +14,13 @@
     "html5",
     "html5 audio",
     "audio sprite",
-    "audiosprite"
+    "audiosprite",
+    "typescript"
   ],
-  "author": "James Simpson <james@goldfirestudios.com> (http://goldfirestudios.com)",
+  "author": "Ville Säävuori <ville@unessa.net>",
   "repository": {
     "type": "git",
-    "url": "git://github.com/goldfire/howler.js.git"
+    "url": "git://github.com:Uninen/howler.js.git"
   },
   "scripts": {
     "test": "vite",

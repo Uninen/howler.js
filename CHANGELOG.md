@@ -1,3 +1,13 @@
+## 3.0.0-alpha.0 (December 14, 2021)
+
+This is a release of a collection of patches and work by the community that hasn't yet been merged upstream. Instead of a private fork I decided to build this in public (for my personal use) in case someone else will find it useful. Contributions welcome!
+
+- `ADDED`: Progress event listener for both Web Audio API and HTML5  ([goldfire#1142](https://github.com/goldfire/howler.js/pull/1142))
+- `ADDED`: html5 play/pause events ([goldfire#1475](https://github.com/goldfire/howler.js/pull/1475))
+- `FIXED`: Low runner "createBuffer" error on iOS ([goldfire#1363](https://github.com/goldfire/howler.js/pull/1363))
+- `FIXED`: iOS control center notification in html5 mode ([goldfire#1530](https://github.com/goldfire/howler.js/pull/1530))
+- `FIXED`: Don't clear a bufferSource that doesn't exist ([goldfire@dab32ba](https://github.com/goldfire/howler.js/commit/dab32ba9e4f2f8059613cdaa8836dd336f2bdc7e))
+- `REFACTOR`: Major refactor / modernization by [Samuel Plumppu](https://github.com/Greenheart/howler.js). (This is basically just a first step but very important one and gives a good place to start.)
 ## 2.2.3 (June 30, 2021)
 - `FIXED` Fatal error in Chrome for iOS ([#1491](https://github.com/goldfire/howler.js/issues/1491)).
 
