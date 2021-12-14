@@ -773,7 +773,7 @@ class Howl {
    * @param id The sound ID (empty to pause all in group).
    * @param skipEmit If true, the `pause` event won't be emitted.
    */
-  pause(id: number, skipEmit?: boolean) {
+  pause(id?: number, skipEmit?: boolean) {
     // If the sound hasn't loaded or a play() promise is pending, add it to the load queue to pause when capable.
     if (this._state !== 'loaded' || this._playLock) {
       this._queue.push({
@@ -1527,9 +1527,9 @@ class Howl {
    * @param id The sound id to check. If none is passed, the whole sound group is checked.
    * @return True if playing and false if not.
    */
-  playing(id: number) {
+  playing(id?: number) {
     // Check the passed sound ID (if any).
-    if (typeof id === 'number') {
+    if (id) {
       var sound = this._soundById(id);
       return sound ? !sound._paused : false;
     }
@@ -1549,7 +1549,7 @@ class Howl {
    * @param id The sound id to check. If none is passed, return full source duration.
    * @return Audio duration in seconds.
    */
-  duration(id: number) {
+  duration(id?: number) {
     var duration = this._duration;
 
     // If we pass an ID, get the sound and return the sprite length.
@@ -1650,7 +1650,8 @@ class Howl {
    * @param  {Number}   once  (INTERNAL) Marks event to fire only once.
    */
   on(event: string, fn: Function, id?: number, once?: number) {
-    var events = this['_on' + event];
+    // FIXME: we should type the event either programatically or manually listing available events
+    let events = this['_on' + event];
 
     if (typeof fn === 'function') {
       events.push(once ? { id: id, fn: fn, once: once } : { id: id, fn: fn });
